@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <canvas id="cnv" width="800" height="800"></canvas>
+  <script>
+    const pixelRatio = 2;
+    let w = cnv.width;
+    let h = cnv.height;
+    cnv.width = w * pixelRatio;
+    cnv.height = h * pixelRatio;
+    cnv.style.width = w + 'px';
+    cnv.style.height = h + 'px';
+
+
+    const gl = cnv.getContext("webgl");
+
+    const vsSource = `
+    attribute vec4 aVertexPosition;
+    varying vec2 pos;
+
+    void main() {
+      pos = aVertexPosition.xy;
+      gl_Position = vec4(aVertexPosition.xy,0,1);
+    }
+  `;
+
+    const fsSource = `
+    precision mediump float;
+
+    uniform vec2 center;
+    uniform float scale;
+    varying vec2 pos;
+
+    void main() {
+      float cr = pos.x*scale-center.x;
+      float ci = pos.y*scale-center.y;
+      float zr = 0.0;
+      float zi = 0.0;
+
+      for(int i = 0;i<80;i++){
+        float nzr = zr*zr - zi*zi + cr;
+        float nzi = 2.0*zr*zi + ci;
+        zr = nzr;
+        zi = nzi;
+      }
+
+      float mag = zr*zr+zi*zi;
+      gl_FragColor = vec4(mag,mag,mag,1);
+    }
+  `;
+
+    function initShaderProgram(gl, vsSource, fsSource) {
+      const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+      const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+      // Create the shader program
+
+      const shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+
+      // If creating the shader program failed, alert
+      if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+        return null;
+      }
+
+      return shaderProgram;
+    }
+
+    // creates a shader of the given type, uploads the source and
+    // compiles it.
+    function loadShader(gl, type, source) {
+      const shader = gl.createShader(type);
+
+      // Send the source to the shader object
+      gl.shaderSource(shader, source);
+
+      // Compile the shader program
+      gl.compileShader(shader);
+
+      // See if it compiled successfully
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        alert('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+
+      return shader;
+    }
+
+    function initBuffers(gl) {
+
+      // Create a buffer for the square's positions.
+      const positionBuffer = gl.createBuffer();
+
+      // Select the positionBuffer as the one to apply buffer
+      // operations to from here out.
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+      // Now create an array of positions for the square.
+      const positions = [
+        -1.0, 1.0,
+        1.0, 1.0,
+        -1.0, -1.0,
+        1.0, -1.0,
+      ];
+
+      // Now pass the list of positions into WebGL to build the
+      // shape. We do this by creating a Float32Array from the
+      // JavaScript array, then use it to fill the current buffer.
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions),
+        gl.STATIC_DRAW
+      );
+
+      return {
+        position: positionBuffer,
+      };
+    }
+
+    function drawScene(gl, programInfo, buffers, uniforms) {
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
+      gl.clearDepth(1.0);                 // Clear everything
+      gl.enable(gl.DEPTH_TEST);           // Enable depth testing
+      gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
+
+      // Clear the canvas before we start drawing on it.
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      // Tell WebGL how to pull out the positions from the position
+      // buffer into the vertexPosition attribute.
+      {
+        const numComponents = 2;  // pull out 2 values per iteration
+        const type = gl.FLOAT;    // the data in the buffer is 32bit floats
+        const normalize = false;  // don't normalize
+        const stride = 0;         // how many bytes to get from one set of values to the next
+        // 0 = use type and numComponents above
+        const offset = 0;         // how many bytes inside the buffer to start from
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset);
+        gl.enableVertexAttribArray(
+          programInfo.attribLocations.vertexPosition
+        );
+      }
+
+      // Tell WebGL to use our program when drawing
+      gl.useProgram(programInfo.program);
+
+      // Set the shader uniforms
+      gl.uniform2f(programInfo.uniformLocations.center, uniforms.center[0], uniforms.center[1]);
+      gl.uniform1f(programInfo.uniformLocations.scale, uniforms.scale);
+
+      {
+        const offset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+      }
+    }
+
+    const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+    const programInfo = {
+      program: shaderProgram,
+      attribLocations: {
+        vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+      },
+      uniformLocations: {
+        center: gl.getUniformLocation(shaderProgram, 'center'),
+        scale: gl.getUniformLocation(shaderProgram, 'scale'),
+      },
+    };
+
+    // Here's where we call the routine that builds all the
+    // objects we'll be drawing.
+    const buffers = initBuffers(gl);
+
+    // Draw the scene
+    let uniforms = {
+      // center: [-0.4675, 0.34835],
+      center: [0.761574, 0.0847596],
+      scale: 2
+    }
+    function animate(t) {
+      drawScene(gl, programInfo, buffers, uniforms);
+      uniforms.scale = Math.exp(-t / 5000 + 1.5);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  </script>
+</body>
+
+</html>

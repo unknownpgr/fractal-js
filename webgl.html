@@ -10,6 +10,7 @@
 <body>
   <canvas id="cnv" width="800" height="800"></canvas>
   <script>
+    // To increase resolution, increase pixelRatio.
     const pixelRatio = 2;
     let w = cnv.width;
     let h = cnv.height;
@@ -32,26 +33,33 @@
   `;
 
     const fsSource = `
-    precision mediump float;
+    // precision mediump float;
+    precision highp float;
 
     uniform vec2 center;
     uniform float scale;
     varying vec2 pos;
+
+    const float maxIter = 80.0;
 
     void main() {
       float cr = pos.x*scale-center.x;
       float ci = pos.y*scale-center.y;
       float zr = 0.0;
       float zi = 0.0;
+      float iter = 0.0;
 
-      for(int i = 0;i<80;i++){
+      for(float i = 0.0; i<maxIter; i++){
         float nzr = zr*zr - zi*zi + cr;
         float nzi = 2.0*zr*zi + ci;
         zr = nzr;
         zi = nzi;
+        if((zr*zr+zi*zi)<4.0){
+          iter=i;
+        }
       }
 
-      float mag = zr*zr+zi*zi;
+      float mag = iter/maxIter;
       gl_FragColor = vec4(mag,mag,mag,1);
     }
   `;
@@ -192,8 +200,8 @@
 
     // Draw the scene
     let uniforms = {
-      // center: [-0.4675, 0.34835],
-      center: [0.761574, 0.0847596],
+      center: [-0.4675, 0.34835],
+      // center: [0.761574, 0.0847596],
       scale: 2
     }
     function animate(t) {

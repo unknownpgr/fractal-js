@@ -30,9 +30,9 @@
     let re = 0, im = 0;
     for (let i = 0; i < iter; i++) {
       [re, im] = julia(re, im, cr, ci);
-      if ((re * re + im * im) > 4) return 1000;
+      if ((re * re + im * im) > 4) return i;
     }
-    return re * re + im * im;
+    return iter;
   }
 
   function render(cx = 0, cy = 0, frameSize = 4) {
@@ -48,12 +48,10 @@
       for (let x = 0; x < wn; x++) {
         let re = (x - wn / 2) * frameSize / wn - cx;
         let im = (y - hn / 2) * frameSize / hn - cy;
-        let ret = isInSet(re, im);
-        ret = ret * 200
-        if (ret < 255) {
-          ctx.fillStyle = `rgb(${ret},${ret},${ret})`
-          ctx.fillRect(x * size, y * size, size, size);
-        }
+        let iter = 20;
+        let ret = isInSet(re, im, iter) * 255 / iter;
+        ctx.fillStyle = `rgb(${ret},${ret},${ret})`
+        ctx.fillRect(x * size, y * size, size, size);
       }
     }
   }

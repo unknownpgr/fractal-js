@@ -9,22 +9,22 @@ Visualize fractal (Mandelbrot set) with javascript.
 
 Below are some interesting results from `webgl.html`.
 
-![download (14)](docs/imgs/download (14).png)
+![im1](docs/imgs/im1.png)
 
-![download (13)](docs/imgs/download (13).png)
+![im2](docs/imgs/im2.png)
 
-![download (12)](docs/imgs/download (12).png)
+![im3](docs/imgs/im3.png)
 
-![download (11)](docs/imgs/download (11).png)
+![im4](docs/imgs/im4.png)
 
-![download (10)](docs/imgs/download (10).png)
+![im5](docs/imgs/im5.png)
 
-![download (9)](docs/imgs/download (9).png)
+![im6](docs/imgs/im6.png)
 
-![download (8)](docs/imgs/download (8).png)
+![im7](docs/imgs/im7.png)
 
-![download (7)](docs/imgs/download (7).png)
+![im8](docs/imgs/im8.png)
 
-![download (6)](docs/imgs/download (6).png)
+![im9](docs/imgs/im9.png)
 
-![download (5)](docs/imgs/download (5).png)
+![im10](docs/imgs/im10.png)

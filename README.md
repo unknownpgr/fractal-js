@@ -3,8 +3,9 @@
 Visualize fractal (Mandelbrot set) with javascript.
 
 - `cpu.html` : Use only pure js. Resolution = 500 by 500, iteration = 20.
+  - See https://unknownpgr.github.io/fractal-js/cpu.html
 - `webgl.html` : Use webgl to. Resolution = 2000 by 2000, iteration = 80.
-
+  - See https://unknownpgr.github.io/fractal-js/webgl.html
 # Results
 
 Below are some interesting results from `webgl.html`.
